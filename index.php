@@ -17,7 +17,7 @@
     if (isset ($_COOKIE['identity'])) {
         $identity = $_COOKIE['identity'];
     } else {
-        $identity = random_bytes (10);
+        $identity = openssl_random_pseudo_bytes (10);
         setcookie ('identity', $identity, time() + (10 * 365 * 24 * 60 * 60));
     }
     
@@ -105,6 +105,9 @@ tfoot {
 .from {
     font-weight: bold;
 }
+.outbound {
+    color: #aaa;
+}
 </style>
 
 <script type="text/javascript">
@@ -126,6 +129,7 @@ function heartbeat() {
         success: function (html) {
             // TODO: don't change body if page hash stays the same
             $("#received").html (html);
+            $('#received').scrollTop($('#received')[0].scrollHeight - $('#received')[0].clientHeight);
         }
     });
 };
@@ -184,7 +188,7 @@ function send() {
         <label for="peer">TO:</label>
         <input type="text" name="peer" id="peer" maxlength="8" style="width: 5eM" placeholder="recipient" value="<?php if (isset ($_COOKIE['peer'])) echo $_COOKIE['peer']; ?>" />
         <label for="time">TTL:</label>
-        <input type="number" name="time" id="time" maxlength="6" style="width: 4eM" value="<?php if (isset ($_COOKIE['ttl'])) echo $_COOKIE['ttl']; else echo "2880"; ?>" />&nbsp;min
+        <input type="number" name="time" id="time" maxlength="6" max="525600" style="width: 4eM" value="<?php if (isset ($_COOKIE['ttl'])) echo $_COOKIE['ttl']; else echo "2880"; ?>" />&nbsp;min
         <input type="text" name="text" id="text" style="width: 99%; margin-top: 0.5eM; margin-bottom: 0.5eM;" onkeypress="if (event.keyCode == 13) send ();" />
         <input type="button" value="SEND" id="submit" onclick="send();" />
     </td>

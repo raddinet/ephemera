@@ -63,19 +63,27 @@
     
         if (isset ($_GET['user'])) {
             if ($id = authenticate ($_GET['user'])) {
-                if ($stmt = $mysqli->prepare ("SELECT `t`,`ttl`,`from`,`text` FROM `data`"
-                                             ." WHERE `to`=?"
+                if ($stmt = $mysqli->prepare ("SELECT `t`,`ttl`,`to`,`from`,`text` FROM `data`"
+                                             ." WHERE (`to`=? OR `from`=?)"
                                              ."   AND DATE_ADD(`t`,INTERVAL `ttl` MINUTE) >= CURRENT_TIMESTAMP"
                                              ." ORDER BY `t` ASC")) {
-                    $stmt->bind_param ('s', $id);
+                    $stmt->bind_param ('ss', $id, $id);
                     if ($stmt->execute()) {
-                        $stmt->bind_result ($t, $ttl, $from, $text);
+                        $stmt->bind_result ($t, $ttl, $to, $from, $text);
                         
                         while ($stmt->fetch ()) {
+                            if ($from == $id ) {
+                                echo '<span class="outbound">';
+                            }
+                            
                             echo '<span class="time">', $t, '</span> '
-                               , '[<span class="from">', crockford32_encode ($from), '</span>] '
+                               , '[<span class="from">', crockford32_encode ($from), ' -&gt; ', crockford32_encode ($to), '</span>] '
                                , xhtml::escape ($text) // TODO: nl2br?
                                , '<br />';
+                               
+                            if ($from == $id ) {
+                                echo '</span>';
+                            }
                         }
                     }
                 }
@@ -101,7 +109,6 @@
                             $insert->bind_param ('dsss', $ttl, $id, $peer, $_POST['text']);
                             if ($insert->execute()) {
                                 $insert->close();
-                                sleep (1);
                                 exit;
                             }
                         }
